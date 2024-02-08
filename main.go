@@ -250,7 +250,7 @@ func main() {
 			}
 		}()
 
-		refreshTicker := time.NewTicker(30 * time.Second)
+		refreshTicker := time.NewTicker(10 * time.Second)
 		go func() {
 			for {
 				select {
@@ -258,9 +258,20 @@ func main() {
 					newDifficulty, err := contract.MiningDifficulty(nil)
 					if err != nil {
 						logger.Errorf("Failed to get difficulty: %v\n", err)
+						continue
 					}
+					timestamp := time.Now().Format("2006-01-02 15:04:05")
+					fmt.Fprintf(writer, "%s[%s] %s\n", color.BlueString("Difficulty"), timestamp, color.GreenString("Current mining difficulty level: %d", newDifficulty))
 					if difficulty.Cmp(newDifficulty) != 0 {
 						difficulty = newDifficulty
+
+						newCurrentChallenge, err := contract.CurrentChallenge(nil)
+						if err != nil {
+							logger.Errorf("Failed to get challenge: %v\n", err)
+							continue
+						}
+						challenge = newCurrentChallenge
+
 						refreshChan <- true
 					}
 				}
@@ -285,11 +296,13 @@ func main() {
 			auth.Value = big.NewInt(1000000000000000)
 			tx, err := contract.Mine(auth, nonce, referrerAddr)
 			if err != nil {
-				logger.Fatalf("Failed to submit mine transaction: %v", err)
+				logger.Errorf("Failed to submit mine transaction: %v", err)
+				break
 			}
 			receipt, err := bind.WaitMined(context.Background(), client, tx)
 			if err != nil {
-				logger.Fatalf("Failed to mine the transaction: %v", err)
+				logger.Errorf("Failed to mine the transaction: %v", err)
+				break
 			}
 			logger.Infof(color.GreenString("Mining transaction successfully confirmed, Transaction Hash: %s"), color.CyanString(receipt.TxHash.Hex()))
 
@@ -297,7 +310,8 @@ func main() {
 		case err := <-errorChan:
 			cancel()
 			wg.Wait()
-			logger.Fatalf("Mining operation failed due to an error: %v", err)
+			logger.Errorf("Mining operation failed due to an error: %v", err)
+			break
 		}
 
 	}
