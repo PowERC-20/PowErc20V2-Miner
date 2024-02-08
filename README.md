@@ -57,7 +57,7 @@ Upon initial run of the tool, a config.yaml configuration file will be generated
 Execute the mining program:
 
 ```sh
-./peth-v2-base-chain-miner
+./peth-v2-miner
 ```
 
 Monitor your terminal for live updates on the mining process. The miner will continue to work according to your `config.yaml` settings.
