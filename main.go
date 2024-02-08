@@ -259,12 +259,9 @@ func main() {
 					if err != nil {
 						logger.Errorf("Failed to get difficulty: %v\n", err)
 					}
-					timestamp := time.Now().Format("2006-01-02 15:04:05")
-					fmt.Fprintf(writer, "%s[%s] %s\n", color.BlueString("Difficulty"), timestamp, color.GreenString("Current mining difficulty level: %d", newDifficulty))
-					if difficulty != newDifficulty {
+					if difficulty.Cmp(newDifficulty) != 0 {
 						difficulty = newDifficulty
 						refreshChan <- true
-						continue
 					}
 				}
 			}
@@ -303,7 +300,6 @@ func main() {
 			logger.Fatalf("Mining operation failed due to an error: %v", err)
 		}
 
-		time.Sleep(3 * time.Second)
 	}
 
 	logger.Info(color.GreenString("Mining process successfully completed"))
