@@ -260,17 +260,17 @@ func main() {
 						logger.Errorf("Failed to get difficulty: %v\n", err)
 						continue
 					}
+					newChallenge, err := contract.CurrentChallenge(nil)
+					if err != nil {
+						logger.Errorf("Failed to get challenge: %v\n", err)
+						continue
+					}
+
 					timestamp := time.Now().Format("2006-01-02 15:04:05")
 					fmt.Fprintf(writer, "%s[%s] %s\n", color.BlueString("Difficulty"), timestamp, color.GreenString("Current mining difficulty level: %d", newDifficulty))
-					if difficulty.Cmp(newDifficulty) != 0 {
+					if difficulty.Cmp(newDifficulty) != 0 || challenge.Cmp(newChallenge) != 0 {
 						difficulty = newDifficulty
-
-						newCurrentChallenge, err := contract.CurrentChallenge(nil)
-						if err != nil {
-							logger.Errorf("Failed to get challenge: %v\n", err)
-							continue
-						}
-						challenge = newCurrentChallenge
+						challenge = newChallenge
 
 						refreshChan <- true
 					}
